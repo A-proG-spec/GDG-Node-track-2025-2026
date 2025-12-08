@@ -1,13 +1,9 @@
+import {error} from 'console';
 import http from 'http';
-
-let students = [];
-let nextId = 1;
+let students = [{id: 1, name: 'anteneh'}, {id: 2, name: 'kebede'}];
+let nextId = 3;
 
 const server = http.createServer ((req, res) => {
-  if (req.url === '/students') {
-    return res.end (JSON.stringify (students));
-  }
-
   if (req.method === 'POST' && req.url === '/students') {
     let body = '';
     req.on ('data', chunk => (body += chunk));
@@ -15,58 +11,54 @@ const server = http.createServer ((req, res) => {
       try {
         const data = JSON.parse (body);
         if (!data.name) {
-          return res.end (JSON.stringify ({error: 'Name is required'}));
+          return res.end (JSON.stringify ({error: 'name is empty'}));
         }
-        const newStudent = {
+        let newStudent = {
           id: nextId++,
           name: data.name,
         };
         students.push (newStudent);
         res.end (JSON.stringify (newStudent));
       } catch (error) {
-        res.end (JSON.stringify ({error: 'Invalid JSON'}));
+        res.end (JSON.stringify ({error: 'Invalid json'}));
       }
     });
-
-    return;
-  }
-  if (req.method === 'PUT' && req.url.startsWith ('/students/')) {
-    const id = Number (req.url.split ('/')[2]);
+  } else if (req.method === 'GET' && req.url === '/') {
+    res.writeHead (200);
+    res.end (JSON.stringify (students));
+  } else if (req.method === 'PUT' && req.url.startsWith ('/students/')) {
+    let id = Number (req.url.split ('/')[2]);
     let body = '';
     req.on ('data', chunk => (body += chunk));
     req.on ('end', () => {
       try {
         const data = JSON.parse (body);
-        const student = students.find (s => s.id === id);
-
+        let student = students.find (s => s.id === id);
         if (!student) {
-          return res.end (JSON.stringify ({error: 'Student not found'}));
+          return res.end (JSON.stringify ({error: 'no student found'}));
         }
-
-        student.name = data.name || student.name;
+        student.name = data.name;
         res.end (JSON.stringify (student));
       } catch (error) {
-        res.end (JSON.stringify ({error: 'Invalid JSON'}));
+        res.end (JSON.stringify ({error: 'invalid json'}));
       }
     });
-    return;
-  }
-
-  if (req.method === 'DELETE' && req.url.startsWith ('/students/')) {
-    const id = Number (req.url.split ('/')[2]);
+  } else if (req.method === 'DELETE' && req.url.startsWith ('/students/')) {
+    const id = Number (req.url.split ('/'[2]));
     const index = students.findIndex (s => s.id === id);
-
-    if (index === -1) {
-      return res.end (JSON.stringify ({error: 'Student not found'}));
+    if (!index) {
+      return res.end (
+        JSON.stringify ({error: 'student with this id is not found'})
+      );
     }
-
     students.splice (index, 1);
-    return res.end (JSON.stringify ({message: 'Student deleted'}));
+    return res.end (JSON.stringify ({message: 'student deleted succesfully'}));
+  } else {
+    res.writeHead (404);
+    res.end ('404 page not found');
   }
-
-  res.end (JSON.stringify ({error: 'Route not found'}));
 });
 
 server.listen (4000, () => {
-  console.log ('server is running on port 4000');
+  console.log ('server is listening');
 });
