@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/A-proG-spec/GDG-Node-track-2025-2026#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "joi": "^18.0.2",
+    "morgan": "^1.10.1"
   }
 }
