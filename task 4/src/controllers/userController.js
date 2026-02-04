@@ -26,6 +26,7 @@ export const createUser = (req, res) => {
     email,
   };
   users.push(newUser);
+  res.json(newUser);
 };
 
 export const updateUser = (req, res) => {

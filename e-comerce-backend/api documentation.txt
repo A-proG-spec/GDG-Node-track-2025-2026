@@ -1,0 +1,340 @@
+Say less. Below is **clean, plain-text, zero-markdown** documentation.
+You can **copy–paste this directly into a `.txt` file** and it’ll stay readable.
+
+---
+
+E-COMMERCE BACKEND API
+POSTMAN TESTING DOCUMENTATION
+-----------------------------
+
+BASE URL
+[http://localhost:5000](http://localhost:5000)
+
+========================================
+PRODUCTS API
+============
+
+1. GET ALL PRODUCTS
+   Method: GET
+   Endpoint: /api/products
+
+Optional Query Params:
+
+* category
+* minPrice
+* maxPrice
+
+Examples:
+GET /api/products
+GET /api/products?category=electronics
+GET /api/products?minPrice=100&maxPrice=1000
+
+Success Response (200):
+[
+{
+"_id": "65a1...",
+"name": "Laptop",
+"description": "Gaming laptop",
+"price": 1200,
+"stock": 10,
+"category": "electronics",
+"arrivalDate": "2026-01-01T00:00:00.000Z"
+}
+]
+
+Edge Cases:
+
+* No products in DB -> returns []
+* Invalid query values -> ignored safely
+
+---
+
+2. GET PRODUCT BY ID
+   Method: GET
+   Endpoint: /api/products/:id
+
+Example:
+GET /api/products/65a1...
+
+Success Response (200):
+{
+"_id": "65a1...",
+"name": "Phone",
+"price": 800
+}
+
+Error Responses:
+404 -> Product not found
+{
+"error": "Product not found"
+}
+
+400 -> Invalid MongoDB ID
+{
+"error": "Invalid ID format"
+}
+
+---
+
+3. CREATE PRODUCT
+   Method: POST
+   Endpoint: /api/products
+
+Request Body:
+{
+"name": "Headphones",
+"description": "Noise cancelling",
+"price": 200,
+"stock": 15,
+"category": "electronics"
+}
+
+Success Response (201):
+{
+"_id": "65a2...",
+"name": "Headphones",
+"price": 200
+}
+
+Validation Errors (400):
+{
+"errors": [
+""price" must be a positive number"
+]
+}
+
+Edge Cases:
+
+* Missing required fields
+* Negative price or stock
+* Empty string values
+
+---
+
+4. UPDATE PRODUCT
+   Method: PUT
+   Endpoint: /api/products/:id
+
+Request Body (partial allowed):
+{
+"price": 150,
+"stock": 20
+}
+
+Success Response (200):
+{
+"_id": "65a2...",
+"price": 150
+}
+
+Errors:
+404 -> Product not found
+400 -> Validation error
+400 -> Invalid ID format
+
+---
+
+5. DELETE PRODUCT
+   Method: DELETE
+   Endpoint: /api/products/:id
+
+Success Response (200):
+{
+"message": "Product deleted"
+}
+
+Errors:
+404 -> Product not found
+400 -> Invalid ID format
+
+========================================
+CART API
+========
+
+6. GET CART
+   Method: GET
+   Endpoint: /api/cart
+
+Success Response (200):
+{
+"items": [],
+"totalAmount": 0
+}
+
+Edge Case:
+
+* If cart does not exist, it is auto-created
+
+---
+
+7. ADD TO CART
+   Method: POST
+   Endpoint: /api/cart
+
+Request Body:
+{
+"productId": "65a1...",
+"quantity": 2
+}
+
+Success Response (200):
+{
+"items": [
+{
+"productId": "65a1...",
+"quantity": 2,
+"price": 500,
+"name": "Phone"
+}
+],
+"totalAmount": 1000
+}
+
+Errors:
+400 -> Invalid product or insufficient stock
+{
+"error": "Invalid product or stock"
+}
+
+400 -> Validation error
+{
+"errors": [
+""quantity" must be greater than or equal to 1"
+]
+}
+
+Edge Cases:
+
+* Adding same product twice increases quantity
+* Quantity = 0 is rejected
+* Fake productId is rejected
+
+---
+
+8. UPDATE CART ITEM (INCREASE QUANTITY)
+   Method: PUT
+   Endpoint: /api/cart/:productId
+
+Request Body:
+{
+"quantity": 1
+}
+
+Behavior:
+
+* Quantity is increased by provided value
+
+Errors:
+404 -> Cart not found
+404 -> Item not found
+400 -> Insufficient stock
+
+---
+
+9. REMOVE FROM CART
+   Method: DELETE
+   Endpoint: /api/cart/:productId
+
+Request Body:
+{
+"quantity": 1
+}
+
+Behavior:
+
+* quantity < existing -> reduces quantity
+* quantity == existing -> removes item
+* quantity > existing -> error
+
+Errors:
+404 -> Item not found
+{
+"error": "item is not found in the cart"
+}
+
+400 -> Quantity exceeds cart amount
+{
+"error": "you have only 1"
+}
+
+========================================
+ORDERS API
+==========
+
+10. CREATE ORDER
+    Method: POST
+    Endpoint: /api/orders
+
+Success Response (201):
+{
+"_id": "65b1...",
+"orderItems": [],
+"totalAmount": 1200,
+"orderDate": "2026-02-04T12:00:00.000Z"
+}
+
+Errors:
+400 -> Cart is empty
+{
+"error": "Cart is empty"
+}
+
+400 -> Stock issues
+{
+"error": "Stock issues",
+"details": [
+"Insufficient stock for Phone"
+]
+}
+
+500 -> Server error
+{
+"error": "Failed to create order"
+}
+
+Edge Cases:
+
+* Product deleted after adding to cart
+* Stock changes before order
+* Mixed availability across items
+
+---
+
+11. GET ALL ORDERS
+    Method: GET
+    Endpoint: /api/orders
+
+Success:
+
+* Orders sorted by newest first
+
+---
+
+12. GET ORDER BY ID
+    Method: GET
+    Endpoint: /api/orders/:id
+
+Errors:
+404 -> Order not found
+400 -> Invalid ID format
+
+========================================
+GLOBAL ERROR HANDLING
+=====================
+
+Validation Error:
+{
+"errors": [
+""quantity" must be greater than or equal to 1"
+]
+}
+
+Invalid MongoDB ID:
+{
+"error": "Invalid ID format"
+}
+
+Internal Server Error:
+{
+"error": "Internal server error"
+}
