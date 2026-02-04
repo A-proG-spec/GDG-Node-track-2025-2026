@@ -1,12 +1,10 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 
-// Load environment variables
-dotenv.config();
 
 const connectDB = async () => {
   try {
-    const connectionString = process.env.MONGODB_URI;
+    const connectionString =
+      "mongodb+srv://root:337739aa@cluster0.zwlm9jh.mongodb.net/e-comerce?retryWrites=true&w=majority";
     await mongoose.connect(connectionString);
     console.log("Connected to MongoDB");
   } catch (error) {
